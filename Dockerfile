@@ -4,7 +4,6 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm ci
 COPY frontend/ ./
-# vite outDir is '../backend/frontend_dist' (relative to /app/frontend)
 RUN mkdir -p /app/backend && npm run build
 
 
@@ -14,6 +13,13 @@ FROM python:3.11-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# OpenVPN + oathtool (TOTP) + iproute2 (ip command for VPN diagnostics)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openvpn \
+    oathtool \
+    iproute2 \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app/backend
 
 COPY backend/requirements.txt ./
@@ -21,10 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend/ ./
 
-# Copy the compiled frontend assets from stage 1
 COPY --from=frontend-build /app/backend/frontend_dist ./frontend_dist
 
-# Startup script handles migrate + collectstatic at runtime (env vars available then)
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 

@@ -27,6 +27,11 @@ frontend/dist/
 .env.local
 .env.*.local
 
+# VPN credentials — never commit
+client.ovpn
+*.pem
+*.ovpn
+
 # IDE
 .vscode/
 .idea/
