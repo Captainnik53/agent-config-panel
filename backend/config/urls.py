@@ -10,11 +10,25 @@ def health(request):
 
 
 def outbound_ip(request):
+    import socket, json as _json
+    result = {}
     try:
         with urllib.request.urlopen('https://api.ipify.org?format=json', timeout=5) as r:
-            return JsonResponse({'outbound_ip': __import__('json').loads(r.read())['ip']})
+            result['outbound_ip'] = _json.loads(r.read())['ip']
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        result['outbound_ip_error'] = str(e)
+
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(6)
+        s.connect(('182.76.167.99', 22))
+        banner = s.recv(256).decode('utf-8', errors='replace').strip()
+        s.close()
+        result['ssh_test'] = f'connected — {banner}'
+    except Exception as e:
+        result['ssh_test'] = f'{type(e).__name__}: {e}'
+
+    return JsonResponse(result)
 
 
 urlpatterns = [
