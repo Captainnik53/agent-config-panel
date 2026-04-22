@@ -3,5 +3,5 @@ builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-healthcheckPath = "/api/staging/agents/"
+healthcheckPath = "/health/"
 restartPolicyType = "ON_FAILURE"
