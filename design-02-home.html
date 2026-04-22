@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice AI Command Center — Dashboard</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080d1a;
+    --sidebar: #0b1120;
+    --panel: #0e1428;
+    --card: #111c35;
+    --card2: #0f1830;
+    --border: #1e2d4d;
+    --border2: #243047;
+    --accent: #6366f1;
+    --accent2: #8b5cf6;
+    --teal: #06b6d4;
+    --green: #10b981;
+    --amber: #f59e0b;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --soft: #94a3b8;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px;
+    background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 20px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-dot {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+  }
+  .logo-name { font-size: 13px; font-weight: 600; line-height: 1.3; }
+  .logo-name small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-section { margin-bottom: 20px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; padding: 0 8px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px;
+    border-radius: 7px;
+    cursor: pointer;
+    color: var(--soft);
+    font-size: 13px;
+    transition: all 0.15s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .nav-item.active {
+    background: rgba(99,102,241,0.18);
+    color: #a5b4fc;
+    font-weight: 500;
+  }
+  .nav-item .icon { width: 16px; text-align: center; font-size: 14px; }
+  .nav-item .badge-count {
+    margin-left: auto;
+    background: rgba(99,102,241,0.3);
+    color: #a5b4fc;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+  }
+
+  .sidebar-footer {
+    padding: 14px 14px;
+    border-top: 1px solid var(--border);
+  }
+  .user-row { display: flex; align-items: center; gap: 10px; }
+  .avatar {
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    flex-shrink: 0;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-role { font-size: 10px; color: var(--muted); }
+
+  /* ── MAIN ── */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    height: 56px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 16px;
+    background: var(--panel);
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 600; }
+  .topbar-sub { font-size: 12px; color: var(--muted); margin-left: 4px; }
+  .topbar-spacer { flex: 1; }
+  .search-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 7px 12px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--muted);
+    width: 200px;
+  }
+  .topbar-btn {
+    width: 32px; height: 32px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 15px;
+  }
+
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+
+  /* ── INSIGHTS ROW ── */
+  .section-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 14px; }
+  .insights-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .insight-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .insight-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+  }
+  .insight-card.deepgram::before { background: linear-gradient(90deg, #00d4b1, #06b6d4); }
+  .insight-card.eleven::before  { background: linear-gradient(90deg, #f97316, #ef4444); }
+  .insight-card.prod::before    { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+  .insight-card.stage::before   { background: linear-gradient(90deg, #f59e0b, #f97316); }
+  .insight-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .insight-label { font-size: 12px; color: var(--soft); font-weight: 500; }
+  .insight-icon { font-size: 20px; }
+  .insight-val { font-size: 32px; font-weight: 700; line-height: 1; margin-bottom: 6px; }
+  .insight-val.deepgram-val { color: #2dd4bf; }
+  .insight-val.eleven-val   { color: #fb923c; }
+  .insight-val.prod-val     { color: #a5b4fc; }
+  .insight-val.stage-val    { color: #fbbf24; }
+  .insight-sub { font-size: 11px; color: var(--muted); }
+  .insight-bar { height: 4px; background: rgba(255,255,255,0.07); border-radius: 2px; margin-top: 12px; }
+  .insight-fill { height: 100%; border-radius: 2px; }
+  .deepgram-fill { background: linear-gradient(90deg,#00d4b1,#06b6d4); width: 72%; }
+  .eleven-fill   { background: linear-gradient(90deg,#f97316,#ef4444); width: 68%; }
+  .prod-fill     { background: linear-gradient(90deg,#6366f1,#8b5cf6); width: 100%; }
+  .stage-fill    { background: linear-gradient(90deg,#f59e0b,#f97316); width: 53%; }
+
+  /* ── PROVIDER BREAKDOWN ── */
+  .two-col { display: grid; grid-template-columns: 1fr 320px; gap: 14px; margin-bottom: 28px; }
+  .provider-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .prov-title { font-size: 13px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .prov-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .prov-name { font-size: 12px; color: var(--soft); width: 120px; flex-shrink: 0; }
+  .prov-bar-wrap { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+  .prov-bar { height: 100%; border-radius: 4px; }
+  .prov-pct { font-size: 12px; font-weight: 600; width: 34px; text-align: right; }
+  .bar-deepgram { background: linear-gradient(90deg,#00d4b1,#06b6d4); }
+  .bar-google   { background: linear-gradient(90deg,#4285f4,#0f9d58); }
+  .bar-eleven   { background: linear-gradient(90deg,#f97316,#ef4444); }
+  .bar-azure    { background: linear-gradient(90deg,#0078d4,#005fa3); }
+  .bar-awaaz    { background: linear-gradient(90deg,#8b5cf6,#6366f1); }
+  .bar-gemini   { background: linear-gradient(90deg,#4285f4,#9c27b0); }
+
+  .activity-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 22px;
+  }
+  .act-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .act-row:last-child { border-bottom: none; }
+  .act-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .act-text { font-size: 12px; color: var(--soft); line-height: 1.5; }
+  .act-text strong { color: var(--text); }
+  .act-time { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* ── AGENT TABLE ── */
+  .tabs-row { display: flex; align-items: center; gap: 0; margin-bottom: 0; }
+  .tab-btn {
+    padding: 9px 20px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .tab-btn:first-child { border-radius: 8px 0 0 0; }
+  .tab-btn:last-child { border-radius: 0 8px 0 0; border-left: none; }
+  .tab-btn.active {
+    background: var(--card);
+    color: #a5b4fc;
+    border-bottom-color: var(--card);
+    font-weight: 600;
+  }
+  .tab-badge {
+    display: inline-block;
+    background: rgba(99,102,241,0.2);
+    color: #a5b4fc;
+    font-size: 10px; font-weight: 600;
+    padding: 1px 6px; border-radius: 10px;
+    margin-left: 6px;
+  }
+  .tab-badge.amber { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .tab-content {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 0 8px 8px 8px;
+    overflow: hidden;
+  }
+  .table-toolbar {
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .table-search {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px; color: var(--text);
+    width: 200px; outline: none;
+  }
+  .filter-btn {
+    background: var(--panel);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px; color: var(--soft);
+    cursor: pointer;
+  }
+  .spacer { flex: 1; }
+  .new-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border: none; border-radius: 6px;
+    padding: 7px 14px;
+    font-size: 12px; font-weight: 600; color: #fff;
+    cursor: pointer;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: rgba(255,255,255,0.02); }
+  th {
+    text-align: left;
+    font-size: 11px; font-weight: 600;
+    color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(30,45,77,0.5);
+    font-size: 12px; color: var(--soft);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.015); }
+  .agent-name { font-weight: 500; color: var(--text); font-size: 13px; }
+  .agent-id { font-size: 10px; color: var(--muted); font-family: monospace; margin-top: 1px; }
+  .provider-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 5px;
+    font-size: 11px; font-weight: 500;
+  }
+  .chip-deepgram { background: rgba(0,212,177,0.12); color: #2dd4bf; }
+  .chip-eleven   { background: rgba(249,115,22,0.12); color: #fb923c; }
+  .chip-awaaz    { background: rgba(139,92,246,0.15); color: #c4b5fd; }
+  .chip-google   { background: rgba(66,133,244,0.12); color: #60a5fa; }
+  .toggle {
+    width: 34px; height: 18px;
+    border-radius: 9px;
+    position: relative; cursor: pointer;
+    flex-shrink: 0;
+  }
+  .toggle.on  { background: #10b981; }
+  .toggle.off { background: #374151; }
+  .toggle::after {
+    content: '';
+    position: absolute; top: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%; background: #fff;
+    transition: left 0.2s;
+  }
+  .toggle.on::after  { left: 18px; }
+  .toggle.off::after { left: 2px; }
+  .status-dot {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px;
+  }
+  .status-dot::before { content: '●'; font-size: 8px; }
+  .status-dot.live   { color: #34d399; }
+  .status-dot.live::before   { color: #10b981; }
+  .status-dot.paused { color: #fbbf24; }
+  .status-dot.paused::before { color: #f59e0b; }
+  .action-btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 4px 10px;
+    font-size: 11px; color: var(--soft);
+    cursor: pointer;
+  }
+  .action-btn:hover { border-color: var(--accent); color: #a5b4fc; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-dot">🎙️</div>
+    <div class="logo-name">Voice AI CC<small>Command Center</small></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-item active"><span class="icon">🏠</span> Home</div>
+      <div class="nav-item"><span class="icon">⚡</span> Production Agents <span class="badge-count">15</span></div>
+      <div class="nav-item"><span class="icon">🧪</span> Staging Agents <span class="badge-count">8</span></div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">NK</div>
+      <div class="user-info">
+        <div class="user-name">Nikunj G.</div>
+        <div class="user-role">Admin · awaaz.de</div>
+      </div>
+      <span style="color:var(--muted);font-size:12px;cursor:pointer;">⋯</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">Dashboard</span>
+    <span class="topbar-sub">Agent Fleet Overview</span>
+    <div class="topbar-spacer"></div>
+    <div class="search-box">🔍 &nbsp;Search agents...</div>
+    <div class="topbar-btn">🔔</div>
+    <div class="topbar-btn">⚙️</div>
+  </div>
+
+  <div class="content">
+    <!-- INSIGHTS -->
+    <div class="section-title">Fleet Insights</div>
+    <div class="insights-grid">
+      <div class="insight-card deepgram">
+        <div class="insight-header">
+          <div class="insight-label">STT — Deepgram</div>
+          <div class="insight-icon">🎤</div>
+        </div>
+        <div class="insight-val deepgram-val">72%</div>
+        <div class="insight-sub">13 of 18 active agents</div>
+        <div class="insight-bar"><div class="insight-fill deepgram-fill"></div></div>
+      </div>
+      <div class="insight-card eleven">
+        <div class="insight-header">
+          <div class="insight-label">TTS — ElevenLabs</div>
+          <div class="insight-icon">🔊</div>
+        </div>
+        <div class="insight-val eleven-val">68%</div>
+        <div class="insight-sub">11 of 16 TTS-enabled agents</div>
+        <div class="insight-bar"><div class="insight-fill eleven-fill"></div></div>
+      </div>
+      <div class="insight-card prod">
+        <div class="insight-header">
+          <div class="insight-label">Production Agents</div>
+          <div class="insight-icon">⚡</div>
+        </div>
+        <div class="insight-val prod-val">15</div>
+        <div class="insight-sub">All live · 0 errors today</div>
+        <div class="insight-bar"><div class="insight-fill prod-fill"></div></div>
+      </div>
+      <div class="insight-card stage">
+        <div class="insight-header">
+          <div class="insight-label">Staging Agents</div>
+          <div class="insight-icon">🧪</div>
+        </div>
+        <div class="insight-val stage-val">8</div>
+        <div class="insight-sub">6 active · 2 paused</div>
+        <div class="insight-bar"><div class="insight-fill stage-fill"></div></div>
+      </div>
+    </div>
+
+    <!-- PROVIDER BREAKDOWN + ACTIVITY -->
+    <div class="two-col">
+      <div class="provider-card">
+        <div class="prov-title">Provider Distribution — All Agents</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">STT Providers</div>
+        <div class="prov-row">
+          <span class="prov-name">🟢 Deepgram</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-deepgram" style="width:72%"></div></div>
+          <span class="prov-pct" style="color:#2dd4bf;">72%</span>
+        </div>
+        <div class="prov-row">
+          <span class="prov-name">🔵 Google STT</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-google" style="width:20%"></div></div>
+          <span class="prov-pct" style="color:#60a5fa;">20%</span>
+        </div>
+        <div class="prov-row" style="margin-bottom:18px;">
+          <span class="prov-name">🟣 Azure STT</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-azure" style="width:8%"></div></div>
+          <span class="prov-pct" style="color:#93c5fd;">8%</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">TTS Providers</div>
+        <div class="prov-row">
+          <span class="prov-name">🟠 ElevenLabs</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-eleven" style="width:68%"></div></div>
+          <span class="prov-pct" style="color:#fb923c;">68%</span>
+        </div>
+        <div class="prov-row" style="margin-bottom:18px;">
+          <span class="prov-name">🔵 Azure TTS</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-azure" style="width:32%"></div></div>
+          <span class="prov-pct" style="color:#93c5fd;">32%</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">NLU Providers</div>
+        <div class="prov-row">
+          <span class="prov-name">🟣 AwaazDe</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-awaaz" style="width:87%"></div></div>
+          <span class="prov-pct" style="color:#c4b5fd;">87%</span>
+        </div>
+        <div class="prov-row">
+          <span class="prov-name">🔵 Gemini</span>
+          <div class="prov-bar-wrap"><div class="prov-bar bar-gemini" style="width:13%"></div></div>
+          <span class="prov-pct" style="color:#93c5fd;">13%</span>
+        </div>
+      </div>
+      <div class="activity-card">
+        <div class="prov-title">Recent Changes</div>
+        <div class="act-row">
+          <div class="act-dot" style="background:#10b981;"></div>
+          <div>
+            <div class="act-text"><strong>Tala Pre-due</strong> STT switched to Deepgram nova-2</div>
+            <div class="act-time">2 min ago · nikunj@awaaz.de</div>
+          </div>
+        </div>
+        <div class="act-row">
+          <div class="act-dot" style="background:#6366f1;"></div>
+          <div>
+            <div class="act-text"><strong>BFL DPD-30</strong> filler audio updated</div>
+            <div class="act-time">1 hr ago · anurag@awaaz.de</div>
+          </div>
+        </div>
+        <div class="act-row">
+          <div class="act-dot" style="background:#f59e0b;"></div>
+          <div>
+            <div class="act-text"><strong>HDFC Agent 7</strong> calling window changed 09:00–18:00</div>
+            <div class="act-time">3 hrs ago · harsh@awaaz.de</div>
+          </div>
+        </div>
+        <div class="act-row">
+          <div class="act-dot" style="background:#10b981;"></div>
+          <div>
+            <div class="act-text"><strong>Staging — Sophie</strong> barge-in enabled</div>
+            <div class="act-time">Yesterday · sophie@awaaz.de</div>
+          </div>
+        </div>
+        <div class="act-row">
+          <div class="act-dot" style="background:#ef4444;"></div>
+          <div>
+            <div class="act-text"><strong>CreditBee Agent 2</strong> voice mail detection off</div>
+            <div class="act-time">2 days ago · ishan@awaaz.de</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

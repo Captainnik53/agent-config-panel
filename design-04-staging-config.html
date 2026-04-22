@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Voice AI Command Center — Staging Config</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #080d1a;
+    --sidebar: #0b1120;
+    --panel: #0e1428;
+    --card: #111c35;
+    --border: #1e2d4d;
+    --border2: #243047;
+    --accent: #f59e0b;
+    --accent-soft: rgba(245,158,11,0.15);
+    --accent-border: rgba(245,158,11,0.3);
+    --indigo: #6366f1;
+    --teal: #06b6d4;
+    --green: #10b981;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --soft: #94a3b8;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+    font-size: 14px;
+  }
+  .sidebar {
+    width: 220px; background: var(--sidebar);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0;
+  }
+  .sidebar-logo {
+    padding: 20px 18px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .logo-dot {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, #6366f1, #06b6d4);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px;
+  }
+  .logo-name { font-size: 13px; font-weight: 600; line-height: 1.3; }
+  .logo-name small { display: block; font-size: 10px; color: var(--muted); font-weight: 400; }
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-section { margin-bottom: 20px; }
+  .nav-label { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.7px; padding: 0 8px; margin-bottom: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-radius: 7px; cursor: pointer; color: var(--soft); font-size: 13px;
+    transition: all 0.15s; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  .nav-item.active { background: rgba(245,158,11,0.15); color: #fbbf24; font-weight: 500; }
+  .nav-item .icon { width: 16px; text-align: center; font-size: 14px; }
+  .nav-item .badge-count { margin-left: auto; font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px; }
+  .badge-prod { background: rgba(99,102,241,0.3); color: #a5b4fc; }
+  .badge-stage { background: rgba(245,158,11,0.25); color: #fbbf24; }
+  .sidebar-footer { padding: 14px; border-top: 1px solid var(--border); }
+  .user-row { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 30px; height: 30px; background: linear-gradient(135deg,#6366f1,#8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color:#fff; flex-shrink: 0; }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 12px; font-weight: 500; }
+  .user-role { font-size: 10px; color: var(--muted); }
+
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar {
+    height: 56px; padding: 0 24px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel); flex-shrink: 0;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
+  .breadcrumb .crumb { cursor: pointer; }
+  .breadcrumb .crumb:hover { color: var(--text); }
+  .breadcrumb .sep { color: var(--border2); }
+  .breadcrumb .current { color: var(--text); font-weight: 500; }
+  .topbar-spacer { flex: 1; }
+  .env-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 6px; padding: 5px 12px;
+    font-size: 12px; color: #fbbf24; font-weight: 500;
+  }
+  .env-badge::before { content: '●'; font-size: 7px; color: #f59e0b; }
+  .clone-badge {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 6px; padding: 5px 12px;
+    font-size: 12px; color: #a5b4fc; font-weight: 500;
+    cursor: pointer;
+  }
+
+  .body-split { flex: 1; display: flex; overflow: hidden; }
+
+  .agent-list-panel {
+    width: 280px; background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+  }
+  .alp-header {
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    font-size: 12px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .alp-new {
+    background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 5px; padding: 3px 8px;
+    font-size: 11px; color: #fbbf24; cursor: pointer;
+  }
+  .alp-search {
+    margin: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--border2);
+    border-radius: 6px; padding: 7px 10px;
+    font-size: 12px; color: var(--text); outline: none; width: calc(100% - 24px);
+  }
+  .agent-list { overflow-y: auto; flex: 1; }
+  .agent-item {
+    padding: 12px 14px; border-bottom: 1px solid rgba(30,45,77,0.5);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .agent-item:hover { background: rgba(245,158,11,0.04); }
+  .agent-item.selected { background: rgba(245,158,11,0.1); border-left: 3px solid #f59e0b; padding-left: 11px; }
+  .ai-name { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+  .ai-id { font-size: 10px; color: var(--muted); font-family: monospace; margin-bottom: 5px; }
+  .ai-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+  .ai-tag { font-size: 10px; padding: 2px 7px; border-radius: 4px; }
+  .tag-stt { background: rgba(0,212,177,0.1); color: #2dd4bf; }
+  .tag-tts { background: rgba(249,115,22,0.1); color: #fb923c; }
+  .tag-nlu { background: rgba(139,92,246,0.1); color: #c4b5fd; }
+  .tag-live { background: rgba(16,185,129,0.1); color: #34d399; }
+  .tag-paused { background: rgba(245,158,11,0.1); color: #fbbf24; }
+  .tag-lang { background: rgba(6,182,212,0.1); color: #67e8f9; }
+
+  .config-panel { flex: 1; overflow-y: auto; padding: 24px; }
+
+  .config-agent-header {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .cah-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg,rgba(245,158,11,0.25),rgba(249,115,22,0.2));
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px;
+    flex-shrink: 0;
+  }
+  .cah-name { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .cah-meta { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .cah-meta span { color: var(--soft); margin-right: 12px; }
+  .cah-badges { display: flex; gap: 8px; }
+  .cah-badge { font-size: 11px; padding: 3px 8px; border-radius: 5px; }
+  .cah-actions { margin-left: auto; display: flex; gap: 8px; flex-shrink: 0; }
+  .btn-save {
+    background: linear-gradient(135deg, #f59e0b, #f97316);
+    border: none; border-radius: 7px;
+    padding: 8px 18px; font-size: 13px; font-weight: 600; color: #000; cursor: pointer;
+  }
+  .btn-clone {
+    background: transparent; border: 1px solid rgba(99,102,241,0.4);
+    border-radius: 7px; padding: 8px 14px; font-size: 13px; color: #a5b4fc; cursor: pointer;
+  }
+  .btn-reset {
+    background: transparent; border: 1px solid var(--border2);
+    border-radius: 7px; padding: 8px 14px; font-size: 13px; color: var(--soft); cursor: pointer;
+  }
+
+  .staging-warning {
+    background: rgba(245,158,11,0.08);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; font-size: 12px; color: #fbbf24;
+  }
+
+  .config-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .cs-header {
+    padding: 14px 20px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; border-bottom: 1px solid var(--border);
+  }
+  .cs-icon { font-size: 16px; }
+  .cs-title { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; }
+  .cs-sub { font-size: 11px; color: var(--muted); }
+  .cs-badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .cs-badge.staging { background: rgba(245,158,11,0.2); color: #fbbf24; }
+  .cs-badge.agent { background: rgba(99,102,241,0.2); color: #a5b4fc; }
+  .cs-chevron { color: var(--muted); font-size: 12px; }
+  .cs-body { padding: 20px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.four { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .field-label { font-size: 11px; font-weight: 600; color: var(--soft); text-transform: uppercase; letter-spacing: 0.4px; }
+  .field-hint  { font-size: 10px; color: var(--muted); margin-top: -4px; }
+  .field-input {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 9px 12px;
+    font-size: 13px; color: var(--text); outline: none; transition: border-color 0.15s;
+  }
+  .field-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(245,158,11,0.12); }
+  .field-select {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 9px 12px;
+    font-size: 13px; color: var(--text); outline: none;
+    appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px;
+  }
+  .field-textarea {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 9px 12px;
+    font-size: 12px; color: #67e8f9;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    outline: none; resize: vertical; min-height: 100px; line-height: 1.7;
+  }
+  .field-textarea:focus { border-color: var(--accent); }
+
+  .toggle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid rgba(30,45,77,0.5);
+  }
+  .toggle-row:nth-child(odd) { padding-right: 20px; }
+  .toggle-row:nth-child(even) { padding-left: 20px; border-left: 1px solid rgba(30,45,77,0.5); }
+  .toggle-info { flex: 1; }
+  .toggle-name { font-size: 13px; color: var(--text); font-weight: 500; margin-bottom: 2px; }
+  .toggle-desc { font-size: 11px; color: var(--muted); }
+  .toggle {
+    width: 40px; height: 22px; border-radius: 11px;
+    position: relative; cursor: pointer; flex-shrink: 0; margin-left: 12px;
+  }
+  .toggle.on  { background: #10b981; }
+  .toggle.off { background: #374151; }
+  .toggle::after {
+    content: ''; position: absolute; top: 3px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    transition: left 0.2s;
+  }
+  .toggle.on::after  { left: 21px; }
+  .toggle.off::after { left: 3px; }
+
+  .provider-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 8px 12px; margin-bottom: 8px;
+  }
+  .provider-row:last-child { margin-bottom: 0; }
+  .pr-label { font-size: 11px; color: var(--muted); width: 80px; flex-shrink: 0; }
+  .pr-chip { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 500; flex-shrink: 0; }
+  .chip-deepgram { background: rgba(0,212,177,0.12); color: #2dd4bf; }
+  .chip-eleven   { background: rgba(249,115,22,0.12); color: #fb923c; }
+  .chip-awaaz    { background: rgba(139,92,246,0.12); color: #c4b5fd; }
+  .pr-path { font-size: 11px; color: var(--muted); font-family: monospace; flex: 1; }
+  .pr-change { font-size: 11px; color: #a5b4fc; cursor: pointer; padding: 2px 8px; border: 1px solid rgba(99,102,241,0.3); border-radius: 4px; }
+  .pr-change:hover { background: rgba(99,102,241,0.1); }
+
+  .nlu-context-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .json-preview {
+    background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 7px; padding: 12px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px; color: #67e8f9; line-height: 1.8;
+    max-height: 160px; overflow-y: auto;
+  }
+  .json-key   { color: #a5b4fc; }
+  .json-str   { color: #86efac; }
+  .json-num   { color: #fdba74; }
+  .json-bool  { color: #f9a8d4; }
+
+  .email-chip-area {
+    background: var(--panel); border: 1px solid var(--border2);
+    border-radius: 7px; padding: 8px 10px;
+    display: flex; flex-wrap: wrap; gap: 6px; min-height: 44px;
+  }
+  .email-chip {
+    background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.25);
+    border-radius: 4px; padding: 3px 8px;
+    font-size: 11px; color: #a5b4fc;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .email-chip .x { color: var(--muted); cursor: pointer; font-size: 10px; }
+  .email-chip .x:hover { color: var(--text); }
+
+  /* Radio-style provider picker */
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-opt {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 14px; border: 1px solid var(--border2);
+    border-radius: 8px; cursor: pointer;
+    font-size: 13px; color: var(--soft);
+    background: var(--panel); transition: all 0.15s; user-select: none;
+  }
+  .radio-opt:hover { border-color: var(--accent); color: var(--text); }
+  .radio-opt.selected {
+    border-color: var(--accent); background: var(--accent-soft);
+    color: var(--text); font-weight: 500;
+  }
+  .radio-dot {
+    width: 15px; height: 15px; border-radius: 50%;
+    border: 2px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .radio-opt.selected .radio-dot { border-color: var(--accent); background: var(--accent); }
+  .radio-opt.selected .radio-dot::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #000; }
+  .opt-badge { font-size: 10px; padding: 1px 6px; border-radius: 4px; margin-left: 2px; }
+  .opt-badge.new  { background: rgba(16,185,129,0.15); color: #34d399; }
+  .opt-badge.beta { background: rgba(245,158,11,0.15); color: #fbbf24; }
+
+  /* LLM model picker */
+  .model-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .model-card {
+    padding: 11px 13px; border: 1px solid var(--border2);
+    border-radius: 8px; cursor: pointer;
+    background: var(--panel); transition: all 0.15s;
+  }
+  .model-card:hover { border-color: var(--accent); }
+  .model-card.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .model-card.selected .model-name { color: #fbbf24; }
+  .model-name { font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .model-provider { font-size: 10px; color: var(--muted); }
+  .model-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; }
+  .mb-fast  { background: rgba(16,185,129,0.15); color: #34d399; }
+  .mb-smart { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+  .mb-cheap { background: rgba(245,158,11,0.12); color: #fbbf24; }
+
+  /* Compact voice list for side-by-side TTS panel */
+  .voice-list { display: flex; flex-direction: column; gap: 6px; }
+  .voice-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border: 1px solid var(--border2);
+    border-radius: 7px; cursor: pointer;
+    background: var(--panel); transition: all 0.15s;
+  }
+  .voice-item:hover { border-color: var(--accent); }
+  .voice-item.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .vi-avatar { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+  .vi-name { font-size: 12px; font-weight: 500; color: var(--text); flex: 1; }
+  .voice-item.selected .vi-name { color: #fbbf24; }
+  .vi-meta { font-size: 10px; color: var(--muted); }
+  .vi-lang { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(6,182,212,0.12); color: #67e8f9; }
+
+  .divider-label {
+    display: flex; align-items: center; gap: 10px;
+    margin: 16px 0 12px;
+    font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .divider-label::before, .divider-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-dot">🎙️</div>
+    <div class="logo-name">Voice AI CC<small>Command Center</small></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item"><span class="icon">🏠</span> Dashboard</div>
+      <div class="nav-item"><span class="icon">📊</span> Analytics</div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Agents</div>
+      <div class="nav-item"><span class="icon">⚡</span> Production <span class="badge-count badge-prod">15</span></div>
+      <div class="nav-item active"><span class="icon">🧪</span> Staging <span class="badge-count badge-stage">8</span></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item"><span class="icon">🔌</span> Providers</div>
+      <div class="nav-item"><span class="icon">📋</span> Templates</div>
+      <div class="nav-item"><span class="icon">⚙️</span> Settings</div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="avatar">NK</div>
+      <div class="user-info">
+        <div class="user-name">Nikunj G.</div>
+        <div class="user-role">Admin · awaaz.de</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="breadcrumb">
+      <span class="crumb">Dashboard</span>
+      <span class="sep">›</span>
+      <span class="crumb">Staging</span>
+      <span class="sep">›</span>
+      <span class="current">Agent Configuration</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="clone-badge">⚡ Promote to Prod</div>
+    <div class="env-badge">🧪 Staging Environment</div>
+  </div>
+
+  <div class="body-split">
+    <!-- AGENT LIST -->
+    <div class="agent-list-panel">
+      <div class="alp-header">
+        <span>Staging Agents</span>
+        <span class="alp-new">+ New</span>
+      </div>
+      <input class="alp-search" type="text" placeholder="🔍  Search agents...">
+      <div class="agent-list">
+        <div class="agent-item selected">
+          <div class="ai-name">Tala Pre-due DPD-7</div>
+          <div class="ai-id">schema: ad_abcdef</div>
+          <div class="ai-tags">
+            <span class="ai-tag tag-stt">Deepgram</span>
+            <span class="ai-tag tag-tts">ElevenLabs</span>
+            <span class="ai-tag tag-lang">es</span>
+            <span class="ai-tag tag-live">Active</span>
+          </div>
+        </div>
+        <div class="agent-item">
+          <div class="ai-name">BFL Stage Agent</div>
+          <div class="ai-id">schema: ad_bflstg</div>
+          <div class="ai-tags">
+            <span class="ai-tag tag-stt">Deepgram</span>
+            <span class="ai-tag tag-tts">ElevenLabs</span>
+            <span class="ai-tag tag-lang">hi</span>
+            <span class="ai-tag tag-live">Active</span>
+          </div>
+        </div>
+        <div class="agent-item">
+          <div class="ai-name">HDFC Test v2</div>
+          <div class="ai-id">schema: ad_hdfc02</div>
+          <div class="ai-tags">
+            <span class="ai-tag tag-stt">Google STT</span>
+            <span class="ai-tag tag-tts">ElevenLabs</span>
+            <span class="ai-tag tag-lang">hi</span>
+            <span class="ai-tag tag-paused">Paused</span>
+          </div>
+        </div>
+        <div class="agent-item">
+          <div class="ai-name">CreditBee Gemini</div>
+          <div class="ai-id">schema: ad_cb_gem</div>
+          <div class="ai-tags">
+            <span class="ai-tag tag-stt">Deepgram</span>
+            <span class="ai-tag tag-nlu">Gemini</span>
+            <span class="ai-tag tag-lang">en</span>
+            <span class="ai-tag tag-live">Active</span>
+          </div>
+        </div>
+        <div class="agent-item">
+          <div class="ai-name">Moneyview Stage</div>
+          <div class="ai-id">schema: ad_mvstg</div>
+          <div class="ai-tags">
+            <span class="ai-tag tag-stt">Deepgram</span>
+            <span class="ai-tag tag-tts">ElevenLabs</span>
+            <span class="ai-tag tag-lang">hi</span>
+            <span class="ai-tag tag-paused">Paused</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIG PANEL -->
+    <div class="config-panel">
+      <!-- Agent header -->
+      <div class="config-agent-header">
+        <div class="cah-icon">🧪</div>
+        <div style="flex:1">
+          <div class="cah-name">Tala Pre-due Loan DPD-7</div>
+          <div class="cah-meta">
+            <span>Schema: ad_abcdef</span>
+            <span>Env: staging</span>
+            <span>Lang: es (Español)</span>
+          </div>
+          <div class="cah-badges">
+            <span class="cah-badge tag-stt">Deepgram STT</span>
+            <span class="cah-badge tag-tts">ElevenLabs TTS</span>
+            <span class="cah-badge tag-nlu">AwaazDe NLU</span>
+            <span class="cah-badge tag-lang">Barge-in ON</span>
+          </div>
+        </div>
+        <div class="cah-actions">
+          <button class="btn-reset">Reset</button>
+          <button class="btn-clone">↗ Clone to Prod</button>
+          <button class="btn-save">💾 Save</button>
+        </div>
+      </div>
+
+      <div class="staging-warning">
+        🧪 <span><strong>Staging environment</strong> — changes here do not affect production. Use "Promote to Prod" to push config upstream.</span>
+      </div>
+
+      <!-- SECTION 1: Basic Identity -->
+      <div class="config-section">
+        <div class="cs-header">
+          <span class="cs-icon">🏷️</span>
+          <span class="cs-title">Identity &amp; Basic Config</span>
+          <span class="cs-sub">Name, language, startup text, schema</span>
+          <span class="cs-badge staging">STAGING</span>
+          <span class="cs-chevron">▾</span>
+        </div>
+        <div class="cs-body">
+          <div class="form-grid" style="margin-bottom:14px;">
+            <div class="form-group">
+              <span class="field-label">Agent Name</span>
+              <input class="field-input" type="text" value="Tala Pre due loan DPD-7">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Schema Name</span>
+              <input class="field-input" type="text" value="ad_abcdef" style="font-family:monospace;">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Language Code</span>
+              <select class="field-select">
+                <option value="es" selected>es — Español</option>
+                <option value="hi">hi — Hindi</option>
+                <option value="en">en — English</option>
+                <option value="tl">tl — Filipino</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <span class="field-label">Environment Type</span>
+              <select class="field-select">
+                <option selected>staging</option>
+                <option>production</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <span class="field-label">Startup Text</span>
+              <span class="field-hint">First utterance from agent when call connects</span>
+              <input class="field-input" type="text" value="hola?">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Feature Toggles -->
+      <div class="config-section">
+        <div class="cs-header">
+          <span class="cs-icon">🎛️</span>
+          <span class="cs-title">Feature Toggles</span>
+          <span class="cs-sub">Enable/disable voice pipeline features</span>
+          <span class="cs-badge agent">AGENT</span>
+          <span class="cs-chevron">▾</span>
+        </div>
+        <div class="cs-body">
+          <div class="toggle-grid">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Enable TTS</div>
+                <div class="toggle-desc">Text-to-speech synthesis</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Barge-In Enabled</div>
+                <div class="toggle-desc">User can interrupt agent speech</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Utterance End Detection</div>
+                <div class="toggle-desc">Deepgram end-of-speech events</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Filler Audio</div>
+                <div class="toggle-desc">Play audio while processing</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Open Socket TTS</div>
+                <div class="toggle-desc">Persistent WS for low latency</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <div class="toggle-name">Auto Punctuation</div>
+                <div class="toggle-desc">Deepgram auto punctuation</div>
+              </div>
+              <div class="toggle on"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 3: Engine Providers -->
+      <div class="config-section">
+        <div class="cs-header">
+          <span class="cs-icon">🔌</span>
+          <span class="cs-title">Engine Providers</span>
+          <span class="cs-sub">STT and TTS engine selection</span>
+          <span class="cs-badge agent">AGENT</span>
+          <span class="cs-chevron">▾</span>
+        </div>
+        <div class="cs-body">
+          <div class="form-group" style="margin-bottom:20px;">
+            <span class="field-label">STT Engine</span>
+            <span class="field-hint">Speech-to-text provider</span>
+            <div class="radio-group" style="margin-top:8px;">
+              <div class="radio-opt selected">
+                <div class="radio-dot"></div>
+                Deepgram
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Navana <span class="opt-badge new">New</span>
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Google STT
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Azure STT
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Sarvam <span class="opt-badge beta">Beta</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:20px;">
+            <span class="field-label">TTS Engine</span>
+            <span class="field-hint">Text-to-speech provider</span>
+            <div class="radio-group" style="margin-top:8px;">
+              <div class="radio-opt selected">
+                <div class="radio-dot"></div>
+                ElevenLabs
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Azure TTS
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Google TTS
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Murf <span class="opt-badge beta">Beta</span>
+              </div>
+              <div class="radio-opt">
+                <div class="radio-dot"></div>
+                Sarvam <span class="opt-badge new">New</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <span class="field-label">Filler Audio Path</span>
+            <span class="field-hint">Comma-separated .wav filenames</span>
+            <input class="field-input" type="text" value="edited_page-turning-66432.wav, edited_a-small-library-in-korea-17716.wav" style="font-size:11px;margin-top:4px;">
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: NLU Context Params -->
+      <div class="config-section">
+        <div class="cs-header">
+          <span class="cs-icon">🧠</span>
+          <span class="cs-title">NLU Context Parameters</span>
+          <span class="cs-sub">LLM model, agent persona, client context, loan variables</span>
+          <span class="cs-badge agent">AGENT</span>
+          <span class="cs-chevron">▾</span>
+        </div>
+        <div class="cs-body">
+          <div class="form-group" style="margin-bottom:18px;">
+            <span class="field-label">LLM Model</span>
+            <span class="field-hint">Underlying language model powering the NLU engine</span>
+            <div class="model-grid" style="margin-top:8px;">
+              <div class="model-card selected">
+                <div class="model-name">Gemini Flash 2.0 <span class="model-badge mb-fast">Fast</span></div>
+                <div class="model-provider">Google DeepMind</div>
+              </div>
+              <div class="model-card">
+                <div class="model-name">Gemini Pro 1.5 <span class="model-badge mb-smart">Smart</span></div>
+                <div class="model-provider">Google DeepMind</div>
+              </div>
+              <div class="model-card">
+                <div class="model-name">GPT-4o mini <span class="model-badge mb-cheap">Cheap</span></div>
+                <div class="model-provider">OpenAI</div>
+              </div>
+              <div class="model-card">
+                <div class="model-name">GPT-4o <span class="model-badge mb-smart">Smart</span></div>
+                <div class="model-provider">OpenAI</div>
+              </div>
+              <div class="model-card">
+                <div class="model-name">Claude 3.5 Haiku <span class="model-badge mb-fast">Fast</span></div>
+                <div class="model-provider">Anthropic</div>
+              </div>
+              <div class="model-card">
+                <div class="model-name">Custom</div>
+                <div class="model-provider">via NLU UUID</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-grid three" style="margin-bottom:14px;">
+            <div class="form-group">
+              <span class="field-label">NLU UUID</span>
+              <input class="field-input" type="text" value="8">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Agent ID</span>
+              <input class="field-input" type="text" value="40">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Environment ID</span>
+              <select class="field-select">
+                <option selected>staging</option>
+                <option>production</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <span class="field-label">Assistant Name</span>
+              <input class="field-input" type="text" value="Maria">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Customer Name</span>
+              <input class="field-input" type="text" value="Sophie Farah">
+            </div>
+          </div>
+
+          <div class="divider-label">Client &amp; Loan Context</div>
+
+          <div class="nlu-context-grid" style="margin-bottom:14px;">
+            <div class="form-group">
+              <span class="field-label">Client Name</span>
+              <input class="field-input" type="text" value="Tala">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Organization</span>
+              <input class="field-input" type="text" value="Tala">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Loan Amount</span>
+              <input class="field-input" type="number" value="2250">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Year</span>
+              <input class="field-input" type="number" value="2026">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Month</span>
+              <input class="field-input" type="text" value="April">
+            </div>
+            <div class="form-group">
+              <span class="field-label">Day of Month</span>
+              <input class="field-input" type="number" value="2">
+            </div>
+          </div>
+
+          <div class="divider-label">Raw NLU Params JSON</div>
+          <div class="json-preview">{
+  <span class="json-key">"agent_id"</span>: <span class="json-str">"40"</span>,
+  <span class="json-key">"nlu_uuid"</span>: <span class="json-str">"8"</span>,
+  <span class="json-key">"environment_id"</span>: <span class="json-str">"staging"</span>,
+  <span class="json-key">"customer_name"</span>: <span class="json-str">"Sophie Farah"</span>,
+  <span class="json-key">"assistant_name"</span>: <span class="json-str">"Maria"</span>,
+  <span class="json-key">"CLIENT_NAME"</span>: <span class="json-str">"Tala"</span>,
+  <span class="json-key">"loan_amount"</span>: <span class="json-num">2250</span>,
+  <span class="json-key">"nlu_model"</span>: <span class="json-str">"Gemini"</span>
+}</div>
+        </div>
+      </div>
+
+      <!-- SECTION 5: STT + TTS Params side by side -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="config-section" style="margin-bottom:0;">
+          <div class="cs-header">
+            <span class="cs-icon">🎤</span>
+            <span class="cs-title">STT Params</span>
+            <span class="cs-badge agent">STT</span>
+            <span class="cs-chevron">▾</span>
+          </div>
+          <div class="cs-body">
+            <div class="form-group" style="margin-bottom:10px;">
+              <span class="field-label">Deepgram Model</span>
+              <select class="field-select"><option selected>nova-2</option><option>nova</option><option>enhanced</option></select>
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <span class="field-label">Utterance End MS</span>
+              <input class="field-input" type="number" value="1000">
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <span class="field-label">Endpointing MS</span>
+              <input class="field-input" type="number" value="1000">
+            </div>
+            <div class="divider-label">Raw JSON</div>
+            <div class="json-preview" style="min-height:70px;">{
+  <span class="json-key">"transcribe_parameters"</span>: {
+    <span class="json-key">"enable_utterance_end_detection"</span>: <span class="json-str">"true"</span>
+  },
+  <span class="json-key">"general_parameters"</span>: {
+    <span class="json-key">"DEEPGRAM_SPEECH_MODEL"</span>: <span class="json-str">"nova-2"</span>,
+    <span class="json-key">"DEEPGRAM_SPEECH_UTTERANCE_END_MS"</span>: <span class="json-str">"1000"</span>
+  }
+}</div>
+          </div>
+        </div>
+
+        <div class="config-section" style="margin-bottom:0;">
+          <div class="cs-header">
+            <span class="cs-icon">🔊</span>
+            <span class="cs-title">TTS Params</span>
+            <span class="cs-badge agent">TTS</span>
+            <span class="cs-chevron">▾</span>
+          </div>
+          <div class="cs-body">
+            <div class="form-group" style="margin-bottom:12px;">
+              <span class="field-label">Voice</span>
+              <span class="field-hint">Synthesised voice for this agent</span>
+              <div class="voice-list" style="margin-top:8px;">
+                <div class="voice-item selected">
+                  <div class="vi-avatar" style="background:rgba(249,115,22,0.15);">👩</div>
+                  <span class="vi-name">Maria</span>
+                  <span class="vi-meta">Warm · Female</span>
+                  <span class="vi-lang">es / hi</span>
+                </div>
+                <div class="voice-item">
+                  <div class="vi-avatar" style="background:rgba(99,102,241,0.15);">👩</div>
+                  <span class="vi-name">Sofia</span>
+                  <span class="vi-meta">Expressive · Female</span>
+                  <span class="vi-lang">es</span>
+                </div>
+                <div class="voice-item">
+                  <div class="vi-avatar" style="background:rgba(6,182,212,0.15);">👨</div>
+                  <span class="vi-name">Arjun</span>
+                  <span class="vi-meta">Clear · Male</span>
+                  <span class="vi-lang">hi / en</span>
+                </div>
+                <div class="voice-item">
+                  <div class="vi-avatar" style="background:rgba(139,92,246,0.15);">👩</div>
+                  <span class="vi-name">Priya</span>
+                  <span class="vi-meta">Friendly · Female</span>
+                  <span class="vi-lang">hi / en</span>
+                </div>
+                <div class="voice-item">
+                  <div class="vi-avatar" style="background:rgba(100,116,139,0.15);">✏️</div>
+                  <span class="vi-name">Custom</span>
+                  <span class="vi-meta">Enter voice ID manually</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+              <div class="form-group">
+                <span class="field-label">Speed</span>
+                <input class="field-input" type="number" value="1" step="0.1">
+              </div>
+              <div class="form-group">
+                <span class="field-label">Stability</span>
+                <input class="field-input" type="number" value="0.5" step="0.1">
+              </div>
+              <div class="form-group">
+                <span class="field-label">Similarity</span>
+                <input class="field-input" type="number" value="0.9" step="0.1">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 6: Notifications -->
+      <div class="config-section">
+        <div class="cs-header">
+          <span class="cs-icon">📧</span>
+          <span class="cs-title">Notification Emails</span>
+          <span class="cs-sub">Alert recipients for this agent</span>
+          <span class="cs-badge staging">STAGING</span>
+          <span class="cs-chevron">▾</span>
+        </div>
+        <div class="cs-body">
+          <div class="email-chip-area">
+            <span class="email-chip">anurag@awaaz.de <span class="x">✕</span></span>
+            <span class="email-chip">nikunj@awaaz.de <span class="x">✕</span></span>
+            <span class="email-chip">nirja@awaaz.de <span class="x">✕</span></span>
+            <span class="email-chip">harsh@awaaz.de <span class="x">✕</span></span>
+            <span class="email-chip">sophie@awaaz.de <span class="x">✕</span></span>
+            <span class="email-chip">ishan@awaaz.de <span class="x">✕</span></span>
+            <input type="text" placeholder="+ add email..." style="border:none;background:transparent;color:var(--soft);font-size:12px;outline:none;min-width:120px;">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
