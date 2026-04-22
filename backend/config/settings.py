@@ -8,6 +8,10 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-dev-key-change-in-pro
 DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# Railway injects RAILWAY_PUBLIC_DOMAIN automatically
+_railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
+if _railway_domain and _railway_domain not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_domain)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -76,7 +80,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Static files — whitenoise serves the React build
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_DIRS = [BASE_DIR / 'frontend_dist' / 'assets']
+_assets_dir = BASE_DIR / 'frontend_dist' / 'assets'
+STATICFILES_DIRS = [_assets_dir] if _assets_dir.exists() else []
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 WHITENOISE_ROOT = BASE_DIR / 'frontend_dist'
