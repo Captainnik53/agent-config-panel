@@ -6,7 +6,7 @@ from django.http import JsonResponse
 
 
 def health(request):
-    return JsonResponse({'status': 'ok'})
+    return JsonResponse({'status': 'ok', 'v': 2})
 
 
 def outbound_ip(request):
